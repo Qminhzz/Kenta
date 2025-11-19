@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KENTA BOT | Discord Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8a2be2; /* Thay đổi từ xanh cyan sang tím */
+            --secondary: #ffffff; /* Thay đổi sang màu trắng */
+            --dark: #f5f0ff; /* Nền sáng hơn */
+            --darker: #e6d9ff; /* Nền sáng hơn */
+            --text: #4a2a8a; /* Chữ tối hơn để dễ đọc trên nền sáng */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: linear-gradient(180deg, #f5f0ff 0%, #e6d9ff 100%); /* Nền tím nhạt */
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        body.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            z-index: 1200;
+            background: rgba(245, 240, 255, 0.9); /* Nền header sáng hơn */
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(138, 43, 226, 0.2); /* Viền tím nhạt */
+            transition: transform .36s ease, box-shadow .2s;
+            transform: translateY(-100%);
+        }
+
+        header.visible {
+            transform: translateY(0);
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+        }
+
+        .logo-img {
+            width: 55px;
+            height: 55px;
+            object-fit: contain;
+            border: none !important;
+            background: none !important;
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--primary), #6b3fa0); /* Gradient tím */
+        }
+
+        .logo-group {
+            border: none !important;
+            background: none !important;
+        }
+
+        .tag-small {
+            font-size: .78rem;
+            color: #6b3fa0; /* Màu chữ phụ tím đậm hơn */
+            margin-left: 6px;
+        }
+
+        /* Sapphire-like hamburger */
+        .ham-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ham-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(180deg, rgba(138, 43, 226, 0.1), rgba(255, 255, 255, 0.1)); /* Nền tím nhạt */
+            border: 1px solid rgba(138, 43, 226, 0.2); /* Viền tím nhạt */
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .ham-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .ham-icon {
+            width: 20px;
+            height: 14px;
+            position: relative;
+        }
+
+        .ham-icon span {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), #6b3fa0); /* Gradient tím */
+            left: 0;
+            right: 0;
+            border-radius: 2px;
+            transition: transform .25s, opacity .25s;
+        }
+
+        .ham-icon span:nth-child(1) {
+            top: 0;
+        }
+
+        .ham-icon span:nth-child(2) {
+            top: 6px;
+        }
+
+        .ham-icon span:nth-child(3) {
+            top: 12px;
+        }
+
+        .ham-open .ham-icon span:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+
+        .ham-open .ham-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .ham-open .ham-icon span:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+
+        /* Side menu */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: -360px;
+            width: 320px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(245, 240, 255, 0.98), rgba(230, 217, 255, 0.98)); /* Nền menu sáng hơn */
+            box-shadow: -20px 40px 80px rgba(138, 43, 226, 0.2); /* Đổ bóng tím nhạt */
+            padding: 88px 20px;
+            border-left: 1px solid rgba(138, 43, 226, 0.1); /* Viền tím nhạt */
+            transition: right .36s cubic-bezier(.2, .9, .3, 1);
+            z-index: 1150;
+        }
+
+        .side-menu.open {
+            right: 0;
+        }
+
+        .side-menu a {
+            display: block;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 12px 0;
+            font-weight: 600;
+            border-bottom: 1px dashed rgba(138, 43, 226, 0.1); /* Viền tím nhạt */
+            transition: color 0.3s ease, padding-left 0.3s ease;
+        }
+
+        .side-menu a:hover {
+            color: #6b3fa0; /* Màu tím đậm hơn khi hover */
+            padding-left: 10px;
+        }
+
+        .side-menu .menu-head {
+            position: absolute;
+            left: 20px;
+            top: 18px;
+            color: #6b3fa0; /* Màu chữ menu tím đậm */
+            font-weight: 700;
+        }
+
+        /* Mobile-friendly overlay */
+        .menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(138, 43, 226, 0.2); /* Overlay tím nhạt */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .24s;
+            z-index: 1140;
+        }
+
+        .menu-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Hero */
+        .hero {
+            padding-top: 120px;
+            text-align: center;
+            padding-bottom: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .hero.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.2rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), #6b3fa0); /* Gradient tím */
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s;
+        }
+
+        .hero.visible .h1 {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .subtitle {
+            max-width: 820px;
+            margin: 12px auto 28px;
+            color: #6b3fa0; /* Màu chữ phụ tím đậm */
+            font-size: 1.05rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+        }
+
+        .hero.visible .subtitle {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btns {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.6s, transform 0.8s ease 0.6s;
+        }
+
+        .hero.visible .btns {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btn {
+            padding: 12px 34px;
+            border-radius: 40px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn.primary {
+            background: linear-gradient(90deg, var(--primary), #6b3fa0); /* Gradient tím */
+            color: white;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3); /* Đổ bóng tím */
+        }
+
+        .btn.primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5); /* Đổ bóng tím đậm hơn khi hover */
+        }
+
+        .btn.ghost {
+            background: transparent;
+            border: 2px solid rgba(138, 43, 226, 0.2); /* Viền tím nhạt */
+            color: var(--primary);
+        }
+
+        .btn.ghost:hover {
+            background: rgba(138, 43, 226, 0.1); /* Nền tím nhạt khi hover */
+            border-color: rgba(138, 43, 226, 0.4); /* Viền tím đậm hơn khi hover */
+            transform: translateY(-3px);
+        }
+
+        /* Stats like Sapphire (8 items) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 18px;
+            margin: 46px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.8s, transform 0.8s ease 0.8s;
+        }
+
+        .hero.visible .stats-grid {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .stat {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(245, 240, 255, 0.8)); /* Nền thống kê sáng hơn */
+            border: 1px solid rgba(138, 43, 226, 0.1); /* Viền tím nhạt */
+            padding: 18px;
+            border-radius: 12px;
+            min-height: 94px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .stat:hover {
+            transform: translateY(-5px);
+            border-color: rgba(138, 43, 226, 0.3); /* Viền tím đậm hơn khi hover */
+        }
+
+        .stat .label {
+            font-size: .9rem;
+            color: #6b3fa0; /* Màu chữ nhãn tím đậm */
+            margin-bottom: 8px;
+        }
+
+        .stat .value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            color: var(--primary);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .features.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 50px;
+            background: linear-gradient(90deg, var(--primary), #6b3fa0); /* Gradient tím */
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .features.visible .section-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s;
+        }
+
+        .features.visible .features-grid {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(245, 240, 255, 0.8)); /* Nền thẻ tính năng sáng hơn */
+            border: 1px solid rgba(138, 43, 226, 0.1); /* Viền tím nhạt */
+            padding: 24px;
+            border-radius: 12px;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(138, 43, 226, 0.3); /* Viền tím đậm hơn khi hover */
+        }
+
+        .feature-icon {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--primary); /* Màu icon tím */
+        }
+
+        .feature-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .feature-text {
+            color: #6b3fa0; /* Màu chữ tím đậm */
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        /* Floating particles background - FULL SCREEN */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            opacity: 0.4;
+            transition: all 0.5s ease;
+            animation: float 20s infinite linear;
+        }
+
+        /* Particle Controls - Floating */
+        .particle-controls {
+            position: fixed;
+            z-index: 1000;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+        }
+
+        .particle-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(245, 240, 255, 0.9); /* Nền nút sáng hơn */
+            border: 2px solid rgba(138, 43, 226, 0.4); /* Viền tím */
+            color: var(--primary);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.3); /* Đổ bóng tím */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .particle-btn:hover {
+            transform: scale(1.15);
+            background: rgba(138, 43, 226, 0.15); /* Nền tím nhạt khi hover */
+            box-shadow: 0 8px 30px rgba(138, 43, 226, 0.5); /* Đổ bóng tím đậm hơn khi hover */
+            border-color: rgba(138, 43, 226, 0.7); /* Viền tím đậm hơn khi hover */
+        }
+
+        .particle-btn.active {
+            background: rgba(138, 43, 226, 0.25); /* Nền tím khi active */
+            box-shadow: 0 0 25px rgba(138, 43, 226, 0.8); /* Đổ bóng tím khi active */
+            animation: pulse 2s infinite;
+        }
+
+        .particle-btn::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary), #6b3fa0); /* Gradient tím */
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .particle-btn:hover::before {
+            opacity: 0.3;
+        }
+
+        /* small devices */
+        @media (max-width: 768px) {
+            .h1 {
+                font-size: 2rem;
+            }
+
+            .logo {
+                font-size: 1.05rem;
+            }
+
+            .logo-img {
+                width: 36px;
+                height: 36px;
+            }
+
+            .logo-tagline {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .particle-controls {
+                right: 15px;
+                top: auto;
+                bottom: 20px;
+                transform: none;
+            }
+            
+            .particle-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Click effects (ripple + sparks + neon burst) */
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            opacity: 0.9;
+            mix-blend-mode: screen;
+        }
+
+        .spark {
+            position: fixed;
+            pointer-events: none;
+            border-radius: 2px;
+            opacity: 0.95;
+        }
+
+        .neon-burst {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(20px, -15px) rotate(90deg);
+            }
+            50% {
+                transform: translate(-15px, 20px) rotate(180deg);
+            }
+            75% {
+                transform: translate(15px, -20px) rotate(270deg);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 25px rgba(138, 43, 226, 0.8); /* Đổ bóng tím */
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 35px rgba(138, 43, 226, 1); /* Đổ bóng tím đậm hơn */
+            }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(calc(var(--move-x) * 1px), calc(var(--move-y) * 1px)) rotate(120deg);
+            }
+            66% {
+                transform: translate(calc(var(--move-x) * -0.5px), calc(var(--move-y) * -0.5px)) rotate(240deg);
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+            }
+        }
+
+        /* small utility */
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .footer {
+            padding: 36px 0;
+            text-align: center;
+            color: #6b3fa0; /* Màu chữ footer tím đậm */
+            border-top: 1px solid rgba(138, 43, 226, 0.1); /* Viền tím nhạt */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .footer.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+<header id="siteHeader">
+    <div class="header-inner">
+        
+        <!-- GROUP LOGO -->
+        <div class="logo-group" style="display:flex; align-items:center; gap:14px;">
+            <img src="https://i.ibb.co/MDbcZHnF/logo-1-png.png" class="logo-img" alt="Kenta Logo">
+
+            <!-- Text KENTA BOT -->
+            <div class="logo-text">KENTA BOT</div>
+        </div>
+
+        <!-- HAMBURGER BUTTON -->
+        <div class="ham-wrap">
+            <div class="ham-btn" id="hamBtn" aria-label="menu-button" role="button">
+                <div class="ham-icon" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</header>
+    <!-- Floating particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Particle Controls -->
+    <div class="particle-controls">
+        <button class="particle-btn" id="changePattern" title="Đổi kiểu hạt nền">🎨</button>
+    </div>
+    <!-- Side Menu -->
+    <div class="side-menu" id="sideMenu" aria-hidden="true">
+        <div class="menu-head">Menu</div>
+        <a href="#">Trang chủ</a>
+        <a href="#">Tính năng</a>
+        <a href="#">Thống kê</a>
+        <a href="https://discord.com/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=8&scope=bot" target="_blank">Invite Bot</a>
+        <a href="https://discord.gg/naBZ2bkkWS" target="_blank">Join Discord</a>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="container">
+            <h1 class="h1">KENTA BOT</h1>
+            <p class="subtitle">THE BOSS GETS THE IMAGE LINK</p>
+            <div class="btns">
+                <button class="btn primary" id="inviteBtn">Invite Bot</button>
+                <button class="btn ghost" id="joinBtn">Join Discord</button>
+            </div>
+            <div class="stats-grid" id="stats">
+                <div class="stat"><div class="label">Guilds</div><div class="value" data-target="1248" id="guilds">0</div></div>
+                <div class="stat"><div class="label">Users</div><div class="value" data-target="582342" id="users">0</div></div>
+                <div class="stat"><div class="label">Commands</div><div class="value" data-target="193" id="commands">0</div></div>
+                <div class="stat"><div class="label">Ping (ms)</div><div class="value" id="ping">0</div></div>
+                <div class="stat"><div class="label">Version</div><div class="value" id="version">v0.0.0</div></div>
+                <div class="stat"><div class="label">Uptime</div><div class="value" id="uptime">0</div></div>
+                <div class="stat"><div class="label">RAM Usage</div><div class="value" id="ram">0</div></div>
+                <div class="stat"><div class="label">CPU Load</div><div class="value" id="cpu">0</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">FEATURES OF KENTA BOT</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">Get Image Link</h3>
+                    <p class="feature-text">[✔] KENTA BOT automatically uploads images and returns links extremely quickly, supporting all image file formats.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⏰</div>
+                    <h3 class="feature-title">Quick Response</h3>
+                    <p class="feature-text">[✔] Bot responds in seconds, cross-platform optimized.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">Anti-Spam</h3>
+                    <p class="feature-text">[✔] Smart anti-spam, automatically detects and blocks spammers..</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👑</div>
+                    <h3 class="feature-title">Premium Member</h3>
+                    <p class="feature-text">[✔] 500MB of storage, unlimited photo uploads, all 5 times!!!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🪙</div>
+                    <h3 class="feature-title">Tcoin</h3>
+                    <p class="feature-text">[✔] You can use 500 Tcoin to buy 3 days premium</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👾</div>
+                    <h3 class="feature-title">Commands</h3>
+                    <p class="feature-text">[✔] The command is easy to use and easy to read. If you don't know how to use it, use the /help command.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+        <div class="container">
+            <p>© 2025 KENTA BOT. All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        // ======== Particle System ========
+        let particles = [];
+        let currentPattern = 0;
+        let mouseX = 0;
+        let mouseY = 0;
+
+        const patterns = [
+            { 
+                name: "Neon Purple", 
+                color: '#8a2be2', 
+                shape: 'circle', 
+                count: 200,
+                size: [2, 8],
+                opacity: 0.4
+            },
+            { 
+                name: "Purple Magic", 
+                color: '#8a2be2', 
+                shape: 'square', 
+                count: 180,
+                size: [2, 6],
+                opacity: 0.5
+            },
+            { 
+                name: "Lavender Energy", 
+                color: '#9370db', 
+                shape: 'triangle', 
+                count: 250,
+                size: [3, 10],
+                opacity: 0.35
+            },
+            { 
+                name: "Violet Spark", 
+                color: '#9400d3', 
+                shape: 'star', 
+                count: 150,
+                size: [3, 9],
+                opacity: 0.45
+            },
+            { 
+                name: "Amethyst Glow", 
+                color: '#9966cc', 
+                shape: 'circle', 
+                count: 220,
+                size: [2, 7],
+                opacity: 0.5
+            }
+        ];
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            particlesContainer.innerHTML = '';
+            particles = [];
+
+            const pattern = patterns[currentPattern];
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            for (let i = 0; i < pattern.count; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random position across entire screen
+                const posX = Math.random() * screenWidth;
+                const posY = Math.random() * screenHeight;
+                
+                // Random size
+                const size = Math.random() * (pattern.size[1] - pattern.size[0]) + pattern.size[0];
+                
+                // Set properties based on pattern
+                particle.style.left = `${posX}px`;
+                particle.style.top = `${posY}px`;
+                particle.style.opacity = pattern.opacity;
+                
+                // Custom animation properties
+                const moveX = (Math.random() - 0.5) * 200;
+                const moveY = (Math.random() - 0.5) * 200;
+                const duration = Math.random() * 30 + 20;
+                const delay = Math.random() * 10;
+                
+                particle.style.setProperty('--move-x', moveX);
+                particle.style.setProperty('--move-y', moveY);
+                particle.style.animation = `particleFloat ${duration}s ease-in-out ${delay}s infinite`;
+                
+                // Different shapes
+                if (pattern.shape === 'circle') {
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.borderRadius = '50%';
+                    particle.style.background = `radial-gradient(circle, ${pattern.color} 0%, transparent 70%)`;
+                    particle.style.boxShadow = `0 0 ${size * 3}px ${pattern.color}`;
+                } else if (pattern.shape === 'square') {
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.borderRadius = '4px';
+                    particle.style.background = pattern.color;
+                    particle.style.boxShadow = `0 0 ${size * 2}px ${pattern.color}`;
+                } else if (pattern.shape === 'triangle') {
+                    particle.style.width = '0';
+                    particle.style.height = '0';
+                    particle.style.background = 'transparent';
+                    particle.style.borderLeft = `${size}px solid transparent`;
+                    particle.style.borderRight = `${size}px solid transparent`;
+                    particle.style.borderBottom = `${size * 1.8}px solid ${pattern.color}`;
+                    particle.style.filter = `drop-shadow(0 0 ${size}px ${pattern.color})`;
+                } else if (pattern.shape === 'star') {
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.background = `radial-gradient(circle, ${pattern.color} 40%, transparent 70%)`;
+                    particle.style.boxShadow = `0 0 ${size * 4}px ${pattern.color}`;
+                    particle.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+                }
+                
+                particlesContainer.appendChild(particle);
+                particles.push({
+                    element: particle,
+                    x: posX,
+                    y: posY,
+                    vx: (Math.random() - 0.5) * 0.8,
+                    vy: (Math.random() - 0.5) * 0.8,
+                    size: size,
+                    originalSize: size
+                });
+            }
+        }
+
+        function changePattern() {
+            currentPattern = (currentPattern + 1) % patterns.length;
+            const patternBtn = document.getElementById('changePattern');
+            
+            // Add active effect
+            patternBtn.classList.add('active');
+            setTimeout(() => patternBtn.classList.remove('active'), 600);
+            
+            // Update tooltip
+            patternBtn.title = `Kiểu: ${patterns[currentPattern].name}`;
+            
+            createParticles();
+        }
+
+        function updateParticlesMovement() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            particles.forEach(particle => {
+                // Mouse interaction - stronger effect
+                const dx = (mouseX / screenWidth * 100) - (particle.x / screenWidth * 100);
+                const dy = (mouseY / screenHeight * 100) - (particle.y / screenHeight * 100);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 15) {
+                    // Strong repel from mouse
+                    particle.vx -= dx * 0.1;
+                    particle.vy -= dy * 0.1;
+                    
+                    // Scale up when near mouse
+                    const scale = Math.max(1, 3 - distance / 5);
+                    particle.element.style.transform = `scale(${scale})`;
+                } else {
+                    // Gentle floating movement with more randomness
+                    particle.vx += (Math.random() - 0.5) * 0.05;
+                    particle.vy += (Math.random() - 0.5) * 0.05;
+                    
+                    // Return to original size
+                    particle.element.style.transform = 'scale(1)';
+                }
+                
+                // Update position
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                
+                // Bounce off edges with damping - full screen boundaries
+                if (particle.x <= 0 || particle.x >= screenWidth) {
+                    particle.vx *= -0.8;
+                    particle.x = Math.max(0, Math.min(screenWidth, particle.x));
+                }
+                if (particle.y <= 0 || particle.y >= screenHeight) {
+                    particle.vy *= -0.8;
+                    particle.y = Math.max(0, Math.min(screenHeight, particle.y));
+                }
+                
+                // Apply air resistance
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
+                
+                // Update element position
+                particle.element.style.left = `${particle.x}px`;
+                particle.element.style.top = `${particle.y}px`;
+            });
+        }
+
+        // Mouse tracking for particle interaction
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        // ======== Page Load Animation ========
+        window.addEventListener('load', () => {
+            document.body.classList.add('loaded');
+            
+            // Create particles immediately
+            createParticles();
+            
+            // Initialize pattern button
+            document.getElementById('changePattern').title = `Kiểu: ${patterns[currentPattern].name}`;
+            
+            // Show header with delay
+            setTimeout(() => {
+                document.getElementById('siteHeader').classList.add('visible');
+            }, 300);
+            
+            // Show hero section with delay
+            setTimeout(() => {
+                document.getElementById('hero').classList.add('visible');
+            }, 500);
+            
+            // Show features section when scrolled into view
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+            
+            observer.observe(document.getElementById('features'));
+            observer.observe(document.getElementById('footer'));
+        });
+
+        // Add custom particle animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes particleFloat {
+                0% {
+                    transform: translate(0, 0) rotate(0deg);
+                }
+                25% {
+                    transform: translate(calc(var(--move-x) * 0.5px), calc(var(--move-y) * 0.5px)) rotate(90deg);
+                }
+                50% {
+                    transform: translate(calc(var(--move-x) * 1px), calc(var(--move-y) * 1px)) rotate(180deg);
+                }
+                75% {
+                    transform: translate(calc(var(--move-x) * 0.5px), calc(var(--move-y) * 0.5px)) rotate(270deg);
+                }
+                100% {
+                    transform: translate(0, 0) rotate(360deg);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ======== Real-time Stats ========
+        function updateRealTimeStats() {
+            // Ping simulation (changes randomly)
+            const pingElement = document.getElementById('ping');
+            const basePing = 42;
+            const randomPing = basePing + Math.floor(Math.random() * 20) - 10;
+            pingElement.textContent = Math.max(10, randomPing);
+            
+            // Uptime counter
+            const uptimeElement = document.getElementById('uptime');
+            const startTime = Date.now() - (12 * 24 * 60 * 60 * 1000);
+            const currentUptime = Date.now() - startTime;
+            const days = Math.floor(currentUptime / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((currentUptime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            uptimeElement.textContent = `${days} days ${hours}h`;
+            
+            // RAM Usage simulation
+            const ramElement = document.getElementById('ram');
+            const baseRAM = 432;
+            const randomRAM = baseRAM + Math.floor(Math.random() * 50) - 25;
+            ramElement.textContent = `${Math.max(300, randomRAM)}MB`;
+            
+            // CPU Load simulation
+            const cpuElement = document.getElementById('cpu');
+            const baseCPU = 7;
+            const randomCPU = baseCPU + Math.floor(Math.random() * 10) - 5;
+            cpuElement.textContent = `${Math.max(2, randomCPU)}%`;
+        }
+
+        // Initialize static stats
+        function initializeStats() {
+            // Guilds
+            const guildsElement = document.getElementById('guilds');
+            animateValue(guildsElement, 1248);
+            
+            // Users
+            const usersElement = document.getElementById('users');
+            animateValue(usersElement, 582342);
+            
+            // Commands
+            const commandsElement = document.getElementById('commands');
+            animateValue(commandsElement, 193);
+            
+            // Version
+            const versionElement = document.getElementById('version');
+            versionElement.textContent = 'v3.7.1';
+            
+            // Start real-time updates
+            updateRealTimeStats();
+            setInterval(updateRealTimeStats, 3000);
+        }
+
+        // ======== Menu open/close (Sapphire-style) ========
+        const hamBtn = document.getElementById('hamBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('menuOverlay');
+        let menuOpen = false;
+
+        function openMenu() {
+            sideMenu.classList.add('open');
+            overlay.classList.add('show');
+            hamBtn.classList.add('ham-open');
+            sideMenu.setAttribute('aria-hidden', 'false');
+            menuOpen = true;
+        }
+
+        function closeMenu() {
+            sideMenu.classList.remove('open');
+            overlay.classList.remove('show');
+            hamBtn.classList.remove('ham-open');
+            sideMenu.setAttribute('aria-hidden', 'true');
+            menuOpen = false;
+        }
+
+        hamBtn.addEventListener('click', () => menuOpen ? closeMenu() : openMenu());
+        overlay.addEventListener('click', closeMenu);
+
+        // ======== Header auto hide/show on scroll ========
+        let lastScroll = 0;
+        const header = document.getElementById('siteHeader');
+        
+        function handleHeaderScroll() {
+            const cur = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (cur > lastScroll && cur > 60) {
+                header.style.transform = 'translateY(-110%)';
+            } else {
+                header.style.transform = 'translateY(0)';
+            }
+            
+            lastScroll = cur <= 0 ? 0 : cur;
+        }
+
+        window.addEventListener('scroll', handleHeaderScroll);
+
+        // ======== Button redirect functionality ========
+        document.getElementById('inviteBtn').addEventListener('click', () => {
+            window.open('https://discord.com/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=8&scope=bot', '_blank');
+        });
+
+        document.getElementById('joinBtn').addEventListener('click', () => {
+            window.open('https://discord.gg/naBZ2bkkWS', '_blank');
+        });
+
+        // ======== Particle Controls ========
+        document.getElementById('changePattern').addEventListener('click', changePattern);
+
+        // ======== Click effects ========
+        function createRipple(x, y) {
+            const el = document.createElement('div');
+            el.className = 'ripple';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            el.style.width = '16px';
+            el.style.height = '16px';
+            el.style.background = 'radial-gradient(circle, rgba(138,43,226,0.9) 0%, rgba(107,63,160,0.6) 60%, transparent 70%)';
+            el.style.transition = 'transform .7s ease-out, opacity .7s ease-out';
+            document.body.appendChild(el);
+            requestAnimationFrame(() => {
+                el.style.transform = 'translate(-50%,-50%) scale(36)';
+                el.style.opacity = '0';
+            });
+            setTimeout(() => el.remove(), 800);
+        }
+
+        function createSparks(x, y, count = 8) {
+            for (let i = 0; i < count; i++) {
+                const sp = document.createElement('div');
+                sp.className = 'spark';
+                const size = Math.random() * 6 + 2;
+                sp.style.width = size + 'px';
+                sp.style.height = size / 3 + 'px';
+                sp.style.left = x + 'px';
+                sp.style.top = y + 'px';
+                sp.style.background = 'linear-gradient(90deg,' + (Math.random() > 0.5 ? 'rgba(138,43,226,0.95)' : 'rgba(107,63,160,0.95)') + ', rgba(255,255,255,0.2))';
+                sp.style.transform = 'translate(-50%,-50%) rotate(' + (Math.random() * 360) + 'deg)';
+                sp.style.opacity = '1';
+                sp.style.transition = 'transform .8s cubic-bezier(.2,.8,.2,1), opacity .8s';
+                document.body.appendChild(sp);
+                const ang = Math.random() * Math.PI * 2;
+                const dist = 14 + Math.random() * 60;
+                requestAnimationFrame(() => {
+                    sp.style.transform = 'translate(' + (Math.cos(ang) * dist) + 'px,' + (Math.sin(ang) * dist) + 'px) rotate(' + (Math.random() * 540) + 'deg)';
+                    sp.style.opacity = '0';
+                });
+                setTimeout(() => sp.remove(), 900);
+            }
+        }
+
+        function createNeonBurst(x, y) {
+            const nb = document.createElement('div');
+            nb.className = 'neon-burst';
+            nb.style.left = x + 'px';
+            nb.style.top = y + 'px';
+            nb.style.width = '8px';
+            nb.style.height = '8px';
+            nb.style.background = 'radial-gradient(circle, rgba(138,43,226,0.9), rgba(107,63,160,0.6))';
+            nb.style.boxShadow = '0 0 30px rgba(138,43,226,0.35), 0 0 60px rgba(107,63,160,0.2)';
+            nb.style.transition = 'transform .5s ease-out, opacity .5s';
+            document.body.appendChild(nb);
+            requestAnimationFrame(() => {
+                nb.style.transform = 'translate(-50%,-50%) scale(28)';
+                nb.style.opacity = '0';
+            });
+            setTimeout(() => nb.remove(), 520);
+        }
+
+        window.addEventListener('click', (e) => {
+            const x = e.clientX, y = e.clientY;
+            createRipple(x, y);
+            createSparks(x, y, 10);
+            createNeonBurst(x, y);
+        });
+
+        // ======== Animate stats numbers ========
+        function animateValue(el, target) {
+            const start = +el.innerText.replace(/[^0-9]/g, '') || 0;
+            if (typeof target === 'string' && isNaN(+target)) {
+                el.innerText = target;
+                return;
+            }
+            target = +target;
+            const duration = 1200;
+            const startTime = performance.now();
+
+            function tick(now) {
+                const t = Math.min(1, (now - startTime) / duration);
+                const val = Math.floor(start + (target - start) * t);
+                el.innerText = val.toLocaleString();
+                if (t < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeStats();
+        });
+
+        // ======== Particle Animation Loop ========
+        function animateParticles() {
+            updateParticlesMovement();
+            requestAnimationFrame(animateParticles);
+        }
+
+        // Start particle animation
+        animateParticles();
+
+        // ======== Accessibility: close menu with ESC ========
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && menuOpen) closeMenu();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', createParticles);
+    </script>
+</body>
+</html>
